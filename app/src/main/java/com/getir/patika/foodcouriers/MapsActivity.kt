@@ -2,6 +2,7 @@ package com.getir.patika.foodcouriers
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -11,9 +12,14 @@ import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -49,6 +55,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private lateinit var placesClient: PlacesClient // for search results
 
     private lateinit var textAddress: TextView
+    private lateinit var cardView: CardView
+
     private var marker: Marker? = null // global marker
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,23 +71,38 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment  //use map in the layout
         mapFragment.getMapAsync(this)
 
-        searchView = findViewById(R.id.search_bar) //find searchView in the layout
-        searchLocation() //activate searchView with Listener
-
         textAddress = findViewById(R.id.textView2) //find text in the layout
 
         checkLocationPermission() // Check location permission
 
         //Find autoCompleteFragment in the layout, set the Place Fields
         autocompleteFragment = (supportFragmentManager.findFragmentById(R.id.place_autocomplete_fragment) as AutocompleteSupportFragment?)!!
-        autocompleteFragment.setPlaceFields(
-            listOf(
-                Place.Field.ID,
-                Place.Field.ADDRESS,
-                Place.Field.LAT_LNG
+
+        searchView = findViewById(R.id.search_bar) //find searchView in the layout
+        cardView = findViewById(R.id.mtrl_card_checked_layer_id)
+
+        val autoSearchBarBool = intent.getBooleanExtra("autoSearchBarBool", false) // Get the parameter
+
+        if (autoSearchBarBool) { // Auto Search Bar Enabled
+            searchView.visibility= View.INVISIBLE
+            cardView.visibility = View.VISIBLE
+
+           autocompleteFragment.setPlaceFields(
+                listOf(
+                    Place.Field.ID,
+                    Place.Field.ADDRESS,
+                    Place.Field.LAT_LNG
+                )
             )
-        )
-        autoCompleteSearch() //activate autocomplete with Listener
+            autocompleteFragment.setHint("Where is your location")
+
+            autoCompleteSearch() //activate autocomplete with Listener
+        }
+        else{ // Normal Search Bar Enabled
+            cardView.visibility = View.INVISIBLE
+            searchView.visibility= View.VISIBLE
+            searchLocation() //activate searchView with Listener
+        }
 
     }
 
@@ -178,7 +201,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
                             textAddress.text = lastAddress //view address in the text
 
                             val latLng = LatLng(address.latitude, address.longitude)
-                            setMarker(latLng,location,12f)
+                            setMarker(latLng,location,17f)
 
                         } else {
                             Toast.makeText(this@MapsActivity, "Location not found", Toast.LENGTH_SHORT).show()
@@ -191,6 +214,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean { //text listener
+
                 return false
             }
         })
